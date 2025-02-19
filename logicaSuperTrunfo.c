@@ -137,6 +137,103 @@ void aguardarEnterParaVoltarAoMenu() {
     limparTerminal();
 }
 
+struct CartaCidade *buscarCidadePorCodigo(const char *codigo) {
+    struct No *atual = listaDeNo;
+    while (atual != NULL) {
+        if (strcmp(atual->cidade.codigo, codigo) == 0) {
+            return &(atual->cidade);
+        }
+        atual = atual->proximaCidade;
+    }
+    return NULL;
+}
+
+typedef enum {
+    CAMPO_POPULACAO = 1,
+    CAMPO_AREA = 2,
+    CAMPO_PIB = 3,
+    CAMPO_PONTOS_TURISTICOS = 4
+} CampoComparacao;
+
+struct CartaCidade *buscarECompararCidadePorCampo(struct CartaCidade *primeiraCidade, struct CartaCidade *segundaCidade, const CampoComparacao campoComparacao) {
+    switch (campoComparacao) {
+        case CAMPO_POPULACAO:
+            if (primeiraCidade->populacao > segundaCidade->populacao) return primeiraCidade;
+            if (primeiraCidade->populacao < segundaCidade->populacao) return segundaCidade;
+            break;
+        case CAMPO_AREA:
+            if (primeiraCidade->area > segundaCidade->area) return primeiraCidade;
+            if (primeiraCidade->area < segundaCidade->area) return segundaCidade;
+            break;
+        case CAMPO_PIB:
+            if (primeiraCidade->PIB > segundaCidade->PIB) return primeiraCidade;
+            if (primeiraCidade->PIB < segundaCidade->PIB) return segundaCidade;
+            break;
+        case CAMPO_PONTOS_TURISTICOS:
+            if (primeiraCidade->quantidadePontosTuristicos > segundaCidade->quantidadePontosTuristicos) return primeiraCidade;
+            if (primeiraCidade->quantidadePontosTuristicos < segundaCidade->quantidadePontosTuristicos) return segundaCidade;
+            break;
+        default:
+            printf("Campo inválido!\n");
+            return NULL;
+    }
+    return NULL;
+}
+
+void recebeInputCodigoCidadesECampoComparacaoUsuario() {
+    struct CartaCidade *primeiraCidade = NULL;
+    struct CartaCidade *segundaCidade = NULL;
+    struct CartaCidade *cartaVencedora = NULL;
+    int opcaoCampoComparacao;
+
+    while (primeiraCidade == NULL) {
+        char codigoCidade[10];
+        lerValorChar("Digite o código da primeira cidade que deseja comparar: ", codigoCidade, 10);
+        primeiraCidade = buscarCidadePorCodigo(codigoCidade);
+        if (primeiraCidade == NULL) {
+            printf("A cidade informada não existe. Tente novamente.\n");
+        }
+    }
+
+    while (segundaCidade == NULL) {
+        char codigoCidade[10];
+        lerValorChar("Digite o código da segunda cidade que deseja comparar: ", codigoCidade, 10);
+        segundaCidade = buscarCidadePorCodigo(codigoCidade);
+        if (segundaCidade == NULL) {
+            printf("A cidade informada não existe. Tente novamente.\n");
+        }
+    }
+
+    do {
+        printf("\nEscolha o campo de comparação:\n");
+        printf("1. População\n");
+        printf("2. Área\n");
+        printf("3. PIB\n");
+        printf("4. Quantidade de pontos turísticos\n");
+        printf("5. Voltar\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcaoCampoComparacao);
+        while (getchar() != '\n');
+
+        if (opcaoCampoComparacao >= CAMPO_POPULACAO && opcaoCampoComparacao <= CAMPO_PONTOS_TURISTICOS) {
+            cartaVencedora = buscarECompararCidadePorCampo(primeiraCidade, segundaCidade, (CampoComparacao)opcaoCampoComparacao);
+            if (cartaVencedora != NULL) {
+                limparTerminal();
+                printf("A cidade vencedora é \n");
+                exibirDadosCidade(cartaVencedora);
+                break;
+            } else {
+                printf("As cidades têm valores iguais no campo escolhido.\n");
+            }
+        } else if (opcaoCampoComparacao == 5) {
+            limparTerminal();
+            break;
+        } else {
+            printf("Opção inválida! Tente novamente.\n");
+        }
+    } while (opcaoCampoComparacao != 5);
+}
+
 void geraMenuDeEscolha() {
     int opcaoMenu;
     struct CartaCidade novaCartaCidade;
@@ -144,7 +241,8 @@ void geraMenuDeEscolha() {
         printf("\nMenu:\n");
         printf("1. Adicionar cidade\n");
         printf("2. Exibir cidades\n");
-        printf("3. Sair\n");
+        printf("3. Comparar cidades\n");
+        printf("4. Sair\n");
         printf("Escolha uma opção: ");
         scanf("%d", &opcaoMenu);
         while (getchar() != '\n');
@@ -164,13 +262,18 @@ void geraMenuDeEscolha() {
             aguardarEnterParaVoltarAoMenu();
             break;
         case 3:
+            limparTerminal();
+            recebeInputCodigoCidadesECampoComparacaoUsuario();
+            aguardarEnterParaVoltarAoMenu();
+            break;
+        case 4:
             printf("Encerrando... \n");
             break;
         default:
             printf("Opcao inválida!");
             break;
         }
-    } while (opcaoMenu != 3);
+    } while (opcaoMenu != 4);
     
     liberarEspacoEmMemoriaDaListaDeNo();
 }
